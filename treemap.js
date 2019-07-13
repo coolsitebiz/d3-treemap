@@ -1,7 +1,5 @@
-
-const w = 800;
+const w = 700;
 const h = 500;
-const padding = 40;
 
 const DATA_SETS = {
     videogames: {
@@ -36,15 +34,8 @@ const ksButton = d3.select("#button-container")
                     .attr("class", "button")
                     .html("<p>Kickstarters</p>");
 
-const heading = d3.select("#heading");
-const canvas = d3.select("#chart-container")
-                .append("svg")
-                .attr("id", "chart")
-                .style("background", "#ddd")
-                .attr("width", w + padding)
-                .attr("height", h + padding);
-
-const svg = d3.select("#chart");
+const treeMapLayout = d3.treemap();
+const svg = d3.select("#chart-container").append("svg").attr("id", "chart").attr("width", w).attr("height", h);
 
 d3.queue()
     .defer(d3.json, DATA_SETS.videogames.URL)
@@ -54,43 +45,30 @@ d3.queue()
 
 function ready(error, vgData, mvData, ksData) {
     
-    if (error) {throw error};
-
     let currentData = vgData;
 
-    function render() {
-        
-        heading.html(currentData.name);
+    treeMapLayout
+        .size([w, h])
+        .paddingOuter(0);
 
-        svg
-            .selectAll("g")
-            .data(currentData.children)
-            .enter()
-            .append("g")
-            .style("border", function(d, i ) {
-                console.log(d.children[0]);
-                return "1px solid black";
-            })
+    let root = d3.hierarchy(currentData);
 
+    root.sum(d => d.value);
 
-            
-            
+    treeMapLayout(root);
 
-    }
-
-    function changeSource(newSource) {
-        currentData = newSource;
-        svg.selectAll("*").remove();
-        render();
-    }
-
-    render();
-    
+    d3.select('svg')
+        .selectAll('rect')
+        .data(root.descendants())
+        .enter()
+        .append('rect')
+        .attr('x', function(d) { return d.x0; })
+        .attr('y', function(d) { return d.y0; })
+        .attr('width', function(d) { return d.x1 - d.x0; })
+        .attr('height', function(d) { return d.y1 - d.y0; })
+        .style("stroke", "black")
+        .style("fill", "none")
 
 
-
-    mvButton.on("click", () => changeSource(mvData));
-    vgButton.on("click", () => changeSource(vgData));
-    ksButton.on("click", () => changeSource(ksData));
-    
+    //console.log(root);
 }

@@ -4,6 +4,10 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+body {
+    display: flex;
+    flex-direction: column;
+}
 #heading {
     text-align: center;
 }
@@ -23,6 +27,7 @@
     align-content: center;
     justify-items: center;
     align-items: center;
+    width: auto;
 }
 
 .button {

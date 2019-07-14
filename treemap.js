@@ -1,5 +1,5 @@
-const w = 700;
-const h = 500;
+const w = 1000;
+const h = 800;
 
 const DATA_SETS = {
     videogames: {
@@ -19,24 +19,31 @@ const DATA_SETS = {
     }
 }
 
-const mvButton = d3.select("#button-container")
-                    .append("div")
-                    .attr("class", "button")
-                    .html("<p>Movies</p>");
+const treeMapLayout = d3.treemap();
 
+//button init
 const vgButton = d3.select("#button-container")
                     .append("div")
                     .attr("class", "button")
                     .html("<p>Video Games</p>");
+
+const mvButton = d3.select("#button-container")
+                    .append("div")
+                    .attr("class", "button")
+                    .html("<p>Movies</p>");
 
 const ksButton = d3.select("#button-container")
                     .append("div")
                     .attr("class", "button")
                     .html("<p>Kickstarters</p>");
 
-const treeMapLayout = d3.treemap();
+//svg init
 const svg = d3.select("#chart-container").append("svg").attr("id", "chart").attr("width", w).attr("height", h);
 
+//color scale
+const colorScale = d3.scaleOrdinal(d3.schemeCategory20);
+
+//async data init
 d3.queue()
     .defer(d3.json, DATA_SETS.videogames.URL)
     .defer(d3.json, DATA_SETS.movies.URL)
@@ -45,30 +52,76 @@ d3.queue()
 
 function ready(error, vgData, mvData, ksData) {
     
+    mvButton.on("click", () => changeSource(mvData));
+    vgButton.on("click", () => changeSource(vgData));
+    ksButton.on("click", () => changeSource(ksData));
+
     let currentData = vgData;
 
     treeMapLayout
         .size([w, h])
-        .paddingOuter(0);
+        .paddingOuter(1)
+        .paddingInner(2)
+        //.tile(d3.treemap);
 
-    let root = d3.hierarchy(currentData);
+    function render() {
+        let root = d3.hierarchy(currentData);
+        root.sum(d => d.value);
+        
+        treeMapLayout(root);
 
-    root.sum(d => d.value);
+        //tilesets
+        let cell = svg  
+            .selectAll("g")
+            .data(root.leaves())
+            .enter()
+            .append("g")
+            .attr("class", "tileset")
+            .attr("transform", d => "translate(" + [d.x0, d.y0] +  ")")
 
-    treeMapLayout(root);
+        //tiles
+        let tile = cell.append('rect')
+            .attr("class", "tile")
+            .attr('width', function(d) { return  (d.x1 - d.x0); })
+            .attr('height', function(d) { return d.y1 - d.y0; })
+            .style("stroke", "gray")
+            .style("fill", (d, i) => colorScale(d.data.category))
+        
+        //text labels 
+        cell.append("text")
+        .selectAll("tspan")
+        .data(function(d) { return d.data.name.split(/(?=[\s][A-Z])/g)})
+        .enter().append("tspan")
+            .text(d => d.trim())
+            .attr("x", 3)
+            .attr("y", (d, i) => 11 + i * 10)
+            .style("font-size", ".5em")
 
-    d3.select('svg')
-        .selectAll('rect')
-        .data(root.descendants())
-        .enter()
-        .append('rect')
-        .attr('x', function(d) { return d.x0; })
-        .attr('y', function(d) { return d.y0; })
-        .attr('width', function(d) { return d.x1 - d.x0; })
-        .attr('height', function(d) { return d.y1 - d.y0; })
-        .style("stroke", "black")
-        .style("fill", "none")
 
 
-    //console.log(root);
+
+            console.log(root)
+    }
+
+    
+
+    function changeSource(newSource) {
+        currentData = newSource;
+        svg.selectAll("*").remove();
+        render();
+    }
+
+
+    render();
 }
+
+    
+
+    
+
+
+
+
+
+    
+

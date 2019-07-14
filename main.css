@@ -10,6 +10,8 @@ body {
 }
 #heading {
     text-align: center;
+    margin-top: 2vh;
+    font-weight: normal;
 }
 
 #button-container {
@@ -56,5 +58,9 @@ body {
     padding: 5px;
     text-align: center;
     color: white;
-    font-weight: bolder;
+    font-weight: normal;
+}
+
+.tooltip {
+
 }

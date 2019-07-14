@@ -20,7 +20,7 @@ const DATA_SETS = {
 }
 
 const treeMapLayout = d3.treemap();
-
+const headingText = {vg: "Top 100 Most Sold Video Games Grouped by Platform", mv: "Top 100 Highest Grossing Movies Grouped By Genre", ks: "Top 100 Most Pledged Kickstarter Campaigns Grouped By Category"}
 //button init
 const vgButton = d3.select("#button-container")
                     .append("div")
@@ -60,24 +60,26 @@ function ready(error, vgData, mvData, ksData) {
 
     treeMapLayout
         .size([w, h])
-        .paddingOuter(1)
-        .paddingInner(2)
-        //.tile(d3.treemap);
+        .paddingOuter(2)
+        .paddingInner(0)
+        .tile(d3.treemapSquarify);
+
 
     function render() {
         let root = d3.hierarchy(currentData);
         root.sum(d => d.value);
         
         treeMapLayout(root);
+        setHeading(root);
 
         //tilesets
         let cell = svg  
             .selectAll("g")
             .data(root.leaves())
             .enter()
-            .append("g")
-            .attr("class", "tileset")
-            .attr("transform", d => "translate(" + [d.x0, d.y0] +  ")")
+                .append("g")
+                .attr("class", "tileset")
+                .attr("transform", d => "translate(" + [d.x0, d.y0] +  ")")
 
         //tiles
         let tile = cell.append('rect')
@@ -89,13 +91,13 @@ function ready(error, vgData, mvData, ksData) {
         
         //text labels 
         cell.append("text")
-        .selectAll("tspan")
-        .data(function(d) { return d.data.name.split(/(?=[\s][A-Z])/g)})
-        .enter().append("tspan")
-            .text(d => d.trim())
-            .attr("x", 3)
-            .attr("y", (d, i) => 11 + i * 10)
-            .style("font-size", ".5em")
+            .selectAll("tspan")
+            .data(function(d) { return d.data.name.split(/(?=[\s][A-Z])/g)})
+            .enter().append("tspan")
+                .text(d => d.trim())
+                .attr("x", 3)
+                .attr("y", (d, i) => 11 + i * 10)
+                .style("font-size", ".5em")
 
 
 
@@ -103,7 +105,23 @@ function ready(error, vgData, mvData, ksData) {
             console.log(root)
     }
 
-    
+    function setHeading(data) {
+        let heading = d3.select("#heading");
+
+        switch(data.data.name) {
+            case "Video Game Sales Data Top 100":
+                heading.html(headingText.vg);
+                break;
+            case "Movies":
+                heading.html(headingText.mv);
+                break;
+            case "Kickstarter":
+                heading.html(headingText.ks);
+                break;
+            default:
+                return "D3 TreeMap";
+        }
+    }
 
     function changeSource(newSource) {
         currentData = newSource;

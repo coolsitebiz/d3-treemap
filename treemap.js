@@ -37,6 +37,8 @@ const ksButton = d3.select("#button-container")
                     .attr("class", "button")
                     .html("<p>Kickstarters</p>");
 
+const tooltip = d3.select("body").append("div").attr("id", "tooltip").attr("data-value", "").html("");
+
 //svg init
 const svg = d3.select("#chart-container").append("svg").attr("id", "chart").attr("width", w).attr("height", h);
 
@@ -84,10 +86,32 @@ function ready(error, vgData, mvData, ksData) {
         //tiles
         let tile = cell.append('rect')
             .attr("class", "tile")
+            .attr("data-name", d => d.data.name)
+            .attr("data-category", d => d.data.category)
+            .attr("data-value", d => d.data.value)
             .attr('width', function(d) { return  (d.x1 - d.x0); })
             .attr('height', function(d) { return d.y1 - d.y0; })
-            .style("stroke", "gray")
+            .style("stroke", "black")
             .style("fill", (d, i) => colorScale(d.data.category))
+            .on("mouseover", function(d) {
+                d3.select(this).style("stroke-width", 2);
+                d3.select("#tooltip")
+                    .attr("data-value", d.data.value)
+                    .style("top", d3.event.pageY)
+                    .style("left", d3.event.pageX)
+                    .style("opacity", .9)
+                    .html(
+                    "<p>Name: " + d.data.name + "<br />" +
+                    "Category: " + d.data.category + "<br />" +
+                    "Value: " + d.data.value + "</p>"
+                    );
+            })
+            .on("mouseout", function(d) {
+                d3.select(this).style("stroke-width", 1);
+                d3.select("#tooltip").style("opacity", 0).html(
+                    ""
+                );
+            })
         
         //text labels 
         cell.append("text")
@@ -99,14 +123,11 @@ function ready(error, vgData, mvData, ksData) {
                 .attr("y", (d, i) => 11 + i * 10)
                 .style("font-size", ".5em")
 
-
-
-
             console.log(root)
     }
 
     function setHeading(data) {
-        let heading = d3.select("#heading");
+        let heading = d3.select("#description");
 
         switch(data.data.name) {
             case "Video Game Sales Data Top 100":

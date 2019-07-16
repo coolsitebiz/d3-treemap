@@ -1,5 +1,6 @@
 const w = 1000;
-const h = 800;
+const h = 1000;
+const legendRectSize = 40;
 
 const DATA_SETS = {
     videogames: {
@@ -61,7 +62,7 @@ function ready(error, vgData, mvData, ksData) {
     let currentData = vgData;
 
     treeMapLayout
-        .size([w, h])
+        .size([w, h - 300])
         .paddingOuter(2)
         .paddingInner(0)
         .tile(d3.treemapSquarify);
@@ -76,7 +77,7 @@ function ready(error, vgData, mvData, ksData) {
 
         //tilesets
         let cell = svg  
-            .selectAll("g")
+            .selectAll(".tileset")
             .data(root.leaves())
             .enter()
                 .append("g")
@@ -91,14 +92,13 @@ function ready(error, vgData, mvData, ksData) {
             .attr("data-value", d => d.data.value)
             .attr('width', function(d) { return  (d.x1 - d.x0); })
             .attr('height', function(d) { return d.y1 - d.y0; })
-            .style("stroke", "black")
+            .style("stroke", "white")
             .style("fill", (d, i) => colorScale(d.data.category))
-            .on("mouseover", function(d) {
-                d3.select(this).style("stroke-width", 2);
+            .on("mousemove", function(d) {
                 d3.select("#tooltip")
                     .attr("data-value", d.data.value)
-                    .style("top", d3.event.pageY)
-                    .style("left", d3.event.pageX)
+                    .style("top", d3.event.pageY + 10)
+                    .style("left", d3.event.pageX + 10)
                     .style("opacity", .9)
                     .html(
                     "<p>Name: " + d.data.name + "<br />" +
@@ -107,10 +107,7 @@ function ready(error, vgData, mvData, ksData) {
                     );
             })
             .on("mouseout", function(d) {
-                d3.select(this).style("stroke-width", 1);
-                d3.select("#tooltip").style("opacity", 0).html(
-                    ""
-                );
+                d3.select("#tooltip").style("opacity", 0).html("");
             })
         
         //text labels 
@@ -120,10 +117,35 @@ function ready(error, vgData, mvData, ksData) {
             .enter().append("tspan")
                 .text(d => d.trim())
                 .attr("x", 3)
-                .attr("y", (d, i) => 11 + i * 10)
-                .style("font-size", ".5em")
+                .attr("y", (d, i) => 9 + i * 10)
+                .style("font-size", ".5em");
 
-            console.log(root)
+        //legend
+        svg.append("g").attr("id", "legend")
+            .selectAll(".legend-item")
+            .data(root.children)
+            .enter().append("rect")
+                .attr("class", "legend-item")
+                .attr("width", legendRectSize)
+                .attr("height", 10)
+                .attr("x", (d, i) => ((w - (root.children.length * legendRectSize)) / 2) + i * legendRectSize) //center legend items
+                .attr("y", h - 260)
+                .style("fill", d => colorScale(d.data.name))
+                .style("stroke", "white");
+
+        //legend labels
+        d3.select("#legend")
+            .selectAll(".legend-text")
+            .data(root.children)
+            .enter().append("text").attr("class", "legend-text")
+                .attr("x", h - 245) //center legend items
+                .attr("y", (d, i) => - 15 - ((w - (root.children.length * legendRectSize)) / 2) - i * legendRectSize)
+                .text(d => d.data.name)
+                .attr("transform", "rotate(90)")
+                
+                
+
+
     }
 
     function setHeading(data) {
@@ -149,7 +171,6 @@ function ready(error, vgData, mvData, ksData) {
         svg.selectAll("*").remove();
         render();
     }
-
 
     render();
 }
